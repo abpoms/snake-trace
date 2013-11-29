@@ -35,7 +35,18 @@ class Ray(object):
 
 class Plane(object):
     def __init__(self):
-        pass
+        self.normal = np.array([0, 0, 0])
+        self.distance = 0
+        self.diffuse = np.array([255, 255, 255])
+
+    def get_intersection(self, ray):
+        numerator = -self.distance - np.dot(ray.origin, self.normal)
+        denominator = np.dot(ray.vector, self.normal)
+        if denominator != 0:
+            t = numerator / denominator
+            if t > 0:
+                return ray.origin + t * ray.vector, self.normal
+        return None, None
 
 
 class Sphere(object):

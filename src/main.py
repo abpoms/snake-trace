@@ -1,18 +1,18 @@
 from Tkinter import Canvas, PhotoImage, Tk, mainloop
-from scene_objects import Light, Camera, Ray, Sphere
+from scene_objects import Light, Camera, Ray, Sphere, Plane
 import numpy as np
 import matrix
 
-HEIGHT = 300
-WIDTH = 300
+HEIGHT = 800
+WIDTH = 800
 
 world_objects = set()
 light_objects = set()
 
 
 def compute_camera_ray(width, height, camera, x, y):
-    normalized_x = ((1.0 * x / width) - 0.5) * 8
-    normalized_y = (0.5 - (1.0 * y / height)) * 8
+    normalized_x = ((1.0 * x / width) - 0.5) * 4
+    normalized_y = (0.5 - (1.0 * y / height)) * 4
     ray_direction = matrix.normalize(normalized_x * camera.right +
                                      normalized_y * camera.up +
                                      camera.direction)
@@ -49,7 +49,7 @@ def main():
     w.create_image((WIDTH/2, HEIGHT/2), image=img, state="normal")
 
     cam = Camera()
-    cam.look_at(np.array([0, 6, -10.0]),
+    cam.look_at(np.array([0, 5, -10]),
                 np.array([0, 0, 0]),
                 np.array([0, 1.0, 0]))
 
@@ -57,12 +57,17 @@ def main():
     sphere.radius = 4
     #world_objects.add(sphere)
     red = Sphere()
-    red.center = np.array([5.0, 3.0, 0.0])
+    red.center = np.array([0.0, -1.0, 0.0])
     red.radius = 4.0
     world_objects.add(red)
 
+    plane = Plane()
+    plane.normal = np.array([0, 1, 0])
+    plane.distance = 4
+    world_objects.add(plane)
+
     light = Light()
-    light.position = np.array([0, 5.0, 0.0])
+    light.position = np.array([5.0, 5.0, -3.0])
     light_objects.add(light)
 
     # Generate rays for each pixel and determine color
