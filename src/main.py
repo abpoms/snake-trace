@@ -2,19 +2,18 @@ from Tkinter import Canvas, PhotoImage, Tk, mainloop
 from scene_objects import Light, Camera, Ray, Sphere, Plane
 import numpy as np
 import matrix
-import math
 import sys
 
 
-HEIGHT = 400
-WIDTH = 400
+HEIGHT = 300
+WIDTH = 300
 
 world_objects = set()
 light_objects = set()
 
 
 def compute_camera_ray(width, height, camera, view_width, x, y):
-    normalized_x = ((1.0 * x / width) - 0.5) * view_width
+    normalized_x = (0.5 - (1.0 * x / width)) * view_width
     normalized_y = (0.5 - (1.0 * y / height)) * view_width
     ray_direction = matrix.normalize(normalized_x * camera.right +
                                      normalized_y * camera.up +
@@ -23,9 +22,17 @@ def compute_camera_ray(width, height, camera, view_width, x, y):
     return ray
 
 
-def compute_light(light, intersection, normal):
-    to_light = matrix.normalize(light.position - intersection)
-    shade = np.dot(to_light, normal)
+def compute_light(world, light, intersection, normal):
+    to_light = light.position - intersection
+    light_distance = np.linalg.norm(to_light)
+    to_light_unit = to_light / light_distance
+    ray = Ray(origin=intersection, vector=to_light_unit)
+    for obj in world:
+        distance, _ = obj.get_intersection(ray)
+        if distance is not None and distance > 0.01 and \
+           distance < light_distance:
+            return 0
+    shade = np.dot(to_light_unit, normal)
     return max(shade, 0)
 
 
@@ -41,8 +48,10 @@ def trace_ray(world, lights, ray):
         if distance is not None and distance < depth:
             depth = distance
             point = point_on_line(ray, distance)
+            shade = None
             for light in lights:
-                shade = compute_light(light, point, normal)
+                shade_temp = compute_light(world, light, point, normal)
+                shade = shade_temp if shade is None else (shade + shade_temp)/2
                 color = obj.diffuse * (shade * 0.8 + 0.2)
     return color
 
@@ -67,7 +76,10 @@ def init_world(world):
 
 
 def init_light(lights):
-    light = Light(position=np.array([5.0, 5.0, -3.0]))
+    light = Light(position=np.array([5.0, 10.0, -3.0]))
+    lights.add(light)
+
+    light = Light(position=np.array([-5.0, 10.0, -3.0]))
     lights.add(light)
 
 
@@ -102,7 +114,7 @@ def main():
             color = trace_ray(world_objects, light_objects, ray)
             # TKinter requires a hex string as color input for photo image
             img.put('#%02X%02X%02X' % tuple(color), (x, y))
-    print ' - ]'
+    print ' ]'
     mainloop()
 
 if __name__ == "__main__":

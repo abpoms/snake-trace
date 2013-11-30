@@ -8,13 +8,10 @@ np_array_zero = np.array([0.0, 0.0, 0.0])
 class Light(object):
     def __init__(self,
                  position=None,
-                 intensity=None):
-        self.position = position
+                 intensity=1):
+        self.position = np.array([0.0, 0.0, 0.0]) if position is None \
+            else position
         self.intensity = intensity
-        if position is None:
-            self.position = np_array_zero
-        if intensity is None:
-            self.intensity = 10
 
 
 class Camera(object):
@@ -22,15 +19,10 @@ class Camera(object):
                  position=None,
                  direction=None,
                  up=None):
-        self.position = position
-        self.direction = direction
-        self.up = up
-        if position is None:
-            self.position = np.array([0, 0, 0])
-        if direction is None:
-            self.direction = np.array([0, 0, 1])
-        if up is None:
-            self.up = np.array([0, 1, 0])
+        self.position = np.array([0, 0, 0]) if position is None else position
+        self.direction = np.array([0, 0, 1]) if direction is None \
+            else direction
+        self.up = np.array([0, 1, 0]) if up is None else up
         self.__compute_right_up()
 
     def look_at(self, eye, center, up):
@@ -48,12 +40,8 @@ class Ray(object):
     def __init__(self,
                  origin=None,
                  vector=None):
-        self.origin = origin
-        self.vector = vector
-        if origin is None:
-            self.origin = np.array([0, 0, 0])
-        if vector is None:
-            self.vector = np.array([0, 0, 1])
+        self.origin = np.array([0, 0, 0]) if origin is None else origin
+        self.vector = np.array([0, 0, 1]) if vector is None else vector
 
     def __str__(self):
         return "origin: %s, vector: %s".format(str(self.origin),
@@ -63,17 +51,12 @@ class Ray(object):
 class Plane(object):
     def __init__(self,
                  normal=None,
-                 distance=None,
+                 distance=5,
                  diffuse=None):
-        self.normal = normal
+        self.normal = np.array([0, 0, -1]) if normal is None else normal
         self.distance = distance
-        self.diffuse = diffuse
-        if normal is None:
-            self.normal = np.array([0, 0, -1])
-        if distance is None:
-            self.distance = 5
-        if diffuse is None:
-            self.diffuse = np.array([255, 255, 255])
+        self.diffuse = np.array([255, 255, 255]) if diffuse is None \
+            else diffuse
 
     def get_intersection(self, ray):
         numerator = -self.distance - np.dot(ray.origin, self.normal)
@@ -88,17 +71,11 @@ class Plane(object):
 class Sphere(object):
     def __init__(self,
                  center=None,
-                 radius=None,
+                 radius=1,
                  diffuse=None):
-        self.center = center
+        self.center = np.array([0.0, 0.0, 0.0]) if center is None else center
         self.radius = radius
-        self.diffuse = diffuse
-        if center is None:
-            self.center = np.array([0.0, 0.0, 0.0])
-        if radius is None:
-            self.radius = 0
-        if diffuse is None:
-            self.diffuse = np.array([0, 0, 255.0])
+        self.diffuse = np.array([0, 0, 255.0]) if diffuse is None else diffuse
 
     def get_intersection(self, ray):
         c = (self.center - ray.origin)
@@ -107,7 +84,7 @@ class Sphere(object):
         d = self.radius ** 2 - (c_distance_sqred - proj_on_ray ** 2)
         if d >= 0:
             d = math.sqrt(d)
-            v = proj_on_ray
+            v = proj_on_ray / np.linalg.norm(ray.vector)
             distance = v - d
             intersection_point = ray.origin + distance * ray.vector
             # find normal
